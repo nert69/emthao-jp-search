@@ -47,9 +47,14 @@ test('blocked sources and redirects reject and always close their page', async (
     await assert.rejects(adapter.search({ newPage: async () => page }, '非売品'), /unavailable/);
     assert.equal(closed, true);
   }
-  const result = await surugaya.search(null, '非売品');
-  assert.equal(result.status, 'unavailable'); assert.deepEqual(result.results, []);
-  assert.equal(new URL(result.searchUrl).searchParams.get('search_word'), '非売品');
+  const proxy = require('../src/scrapers/marketProxy');
+  const original = proxy.search;
+  proxy.search = async (_c, query, opts, source) => {
+    assert.equal(query, '非売品'); assert.equal(source, 'surugaya'); assert.equal(opts.page, 2);
+    return { results: [{ title: query }], status: 'ok' };
+  };
+  try { assert.equal((await surugaya.search(null, '非売品', { page: 2 })).results.length, 1); }
+  finally { proxy.search = original; }
 });
 
 test('adapter pagination keeps native-page items and handles a crossing limit', async () => {

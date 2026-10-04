@@ -252,7 +252,7 @@ export default function App() {
           {!loading && !hasResults && !query && (
             <div className="empty-state landing">
               <h2>Search Japanese marketplaces at once</h2>
-              <p>Mercari, Yahoo Auctions, PayPay, Rakuma, and Mandarake — one keyword, JPY + VND prices. Surugaya direct search is also available.</p>
+              <p>Mercari, Yahoo Auctions, PayPay, Rakuma, Mandarake, and Surugaya — one keyword, JPY + VND prices.</p>
             </div>
           )}
         </main>

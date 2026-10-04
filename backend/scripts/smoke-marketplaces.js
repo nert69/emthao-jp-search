@@ -16,6 +16,7 @@ const sources = ['mercari', 'yahoo', 'paypay', 'rakuma', 'mandarake', 'surugaya'
       const results = requested.filter(s => s !== 'surugaya').flatMap(source => Array.from({ length: 20 }, (_, i) => ({
         source, title: `${params.get('q')} ${source} ${number}-${i}`, price: 1320, currency: 'JPY',
         url: `https://example.com/${source}/${number}/${i}`, image: null,
+        ...(source === 'yahoo' ? { provider: 'Buyee', buyeeUrl: `https://buyee.jp/item/jdirectitems/auction/a${number}${i}`, zenmarketUrl: `https://zenmarket.jp/auction.aspx?itemCode=a${number}${i}` } : {}),
         ...(source === 'mandarake' ? { shop: '名古屋店', availability: 'stock_confirmation' } : {}),
       })));
       return route.fulfill({ headers: { 'Access-Control-Allow-Origin': '*' }, json: {
@@ -30,6 +31,12 @@ const sources = ['mercari', 'yahoo', 'paypay', 'rakuma', 'mandarake', 'surugaya'
     await page.waitForFunction(() => document.querySelectorAll('.card').length === 100);
     assert.equal(await page.locator('.source-tabs .source-tab').count(), 7);
     assert.match(await page.locator('.source-warning').innerText(), /Surugaya/);
+    await page.getByRole('tab', { name: /Yahoo Auctions/ }).click();
+    const yahooCard = page.locator('.card').first();
+    assert.match(await yahooCard.innerText(), /via Buyee/);
+    assert.match(await yahooCard.getByRole('link', { name: 'Buyee', exact: true }).getAttribute('href'), /buyee.jp/);
+    assert.match(await yahooCard.getByRole('link', { name: 'ZenMarket', exact: true }).getAttribute('href'), /zenmarket.jp/);
+    assert.match(await yahooCard.locator('.card-image-link').getAttribute('href'), /buyee.jp/);
     await page.getByRole('tab', { name: /Rakuma/ }).click();
     assert.equal(await page.locator('.card').count(), 20);
     await page.locator('.bookmark-btn').first().click();

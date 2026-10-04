@@ -15,10 +15,11 @@ const SOURCE_LABEL = {
 export function ResultCard({ item, weightKg, pricing, isBookmarked, onToggleBookmark }) {
   const translated = toTranslateUrl(item.url);
   const sourceCls = `src-${item.source}`;
+  const viewUrl = item.buyeeUrl || item.zenmarketUrl || item.url;
 
   return (
     <article className="card">
-      <a className="card-image-link" href={item.url} target="_blank" rel="noopener noreferrer">
+      <a className="card-image-link" href={viewUrl} target="_blank" rel="noopener noreferrer">
         {item.image ? (
           <img src={item.image} alt={item.title} loading="lazy" />
         ) : (
@@ -37,6 +38,7 @@ export function ResultCard({ item, weightKg, pricing, isBookmarked, onToggleBook
         <PriceBlock jpy={item.price} weightKg={weightKg} pricing={pricing} />
 
         <div className="card-meta">
+          {item.provider && <span className="meta-chip">via {item.provider}</span>}
           {item.shop && <span className="meta-chip">{item.shop}</span>}
           {item.availability && <span className="meta-chip">{item.availability === "stock_confirmation" ? "Stock confirmation required" : "On sale"}</span>}
           {item.condition && <span className="meta-chip">{translateCondition(item.condition)}</span>}
@@ -45,12 +47,17 @@ export function ResultCard({ item, weightKg, pricing, isBookmarked, onToggleBook
         </div>
 
         <div className="card-actions">
+          {item.buyeeUrl || item.zenmarketUrl ? <>
+            {item.buyeeUrl && <a className="btn btn-primary" href={item.buyeeUrl} target="_blank" rel="noopener noreferrer">Buyee</a>}
+            {item.zenmarketUrl && <a className="btn btn-secondary" href={item.zenmarketUrl} target="_blank" rel="noopener noreferrer">ZenMarket</a>}
+          </> : <>
           <a className="btn btn-primary" href={translated} target="_blank" rel="noopener noreferrer">
             Translated
           </a>
           <a className="btn btn-secondary" href={item.url} target="_blank" rel="noopener noreferrer">
             Original
           </a>
+          </>}
           <BookmarkButton isBookmarked={isBookmarked} onToggle={onToggleBookmark} />
         </div>
       </div>

@@ -100,7 +100,8 @@ router.get('/search', async (req, res) => {
     const perScraperResults = await Promise.all(
       sources.map((src) =>
         limiter(() =>
-          withTimeout(SCRAPERS[src](context, q, { limit, yahooMode, page }), SCRAPER_TIMEOUT_MS,
+          withTimeout(SCRAPERS[src](context, q, { limit, yahooMode, page }),
+            ['yahoo', 'paypay', 'surugaya'].includes(src) ? Math.max(SCRAPER_TIMEOUT_MS, 45000) : SCRAPER_TIMEOUT_MS,
             { results: [], status: 'unavailable', hasMore: false, message: `${src} did not respond. Try refreshing.` }, src)
         )
       )

@@ -13,7 +13,7 @@ for (const name of ['mercari', 'yahoo', 'paypay', 'rakuma', 'mandarake', 'suruga
   require.cache[path] = { exports: { search: async (_c, q, opts) => {
     queries.push({ name, q, opts });
     if (name === 'mandarake') throw new Error('blocked');
-    if (name === 'paypay') return new Promise(() => {});
+    if (name === 'mercari') return new Promise(() => {});
     if (name === 'surugaya') return { results: [], status: 'unavailable', hasMore: false, searchUrl: 'https://www.suruga-ya.jp/search', message: 'Unavailable' };
     const item = { title: q, source: name, price: 123, url: `https://example.com/${name}` };
     return name === 'rakuma' ? { results: [item], status: 'ok', hasMore: true } : [item, item];
@@ -31,7 +31,7 @@ test('combined search isolates failure/timeout, deduplicates, caches and preserv
     const result = await (await fetch(url)).json();
     assert.equal(result.count, 3); assert.equal(result.sources.length, 6);
     assert.equal(result.sourceStatus.mandarake.status, 'unavailable');
-    assert.equal(result.sourceStatus.paypay.status, 'unavailable');
+    assert.equal(result.sourceStatus.mercari.status, 'unavailable');
     assert.equal(result.sourceStatus.rakuma.hasMore, true);
     assert.ok(queries.every(call => call.q === 'シムズオンライン' && call.opts.page === 2));
     assert.equal(closes, 1);

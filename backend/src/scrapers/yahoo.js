@@ -3,6 +3,7 @@ const { paceDomain } = require('../concurrency');
 const { toItem } = require('./normalize');
 const { parsePrice } = require('../util/parsePrice');
 const { absoluteUrl } = require('../util/absoluteUrl');
+const proxy = require('./marketProxy');
 
 const SOURCE = 'yahoo';
 const HOST = 'auctions.yahoo.co.jp';
@@ -34,14 +35,8 @@ async function search(context, query, opts = {}) {
     await paceDomain(HOST);
     const response = await page.goto(url, { timeout: TIMEOUT_MS, waitUntil: 'domcontentloaded' });
     if (response && !response.ok()) {
-      const text = await page.locator('body').innerText();
-      const regionBlocked = /欧州経済領域|no longer available in the EEA|United Kingdom/i.test(text);
-      return {
-        results: [], status: 'unavailable', hasMore: false,
-        message: regionBlocked
-          ? 'Yahoo Auctions blocks access from the UK/EEA. Run the search backend in a supported region (such as Japan) to retrieve Yahoo results.'
-          : `Yahoo Auctions is unavailable (HTTP ${response.status()}). Try refreshing later.`,
-      };
+      await page.close().catch(() => {});
+      return proxy.search(context, query, opts, SOURCE);
     }
 
     const remaining = TIMEOUT_MS - (Date.now() - start);
@@ -52,7 +47,8 @@ async function search(context, query, opts = {}) {
         { scraper: SOURCE, status: 'no-items', mode, durationMs: Date.now() - start },
         'yahoo .Product not found'
       );
-      return [];
+      await page.close().catch(() => {});
+      return proxy.search(context, query, opts, SOURCE);
     }
 
     const raws = await page.$$eval(
@@ -124,7 +120,7 @@ async function search(context, query, opts = {}) {
       { scraper: SOURCE, durationMs: Date.now() - start, error: err.message },
       'yahoo scrape failed'
     );
-    return [];
+    return proxy.search(context, query, opts, SOURCE);
   } finally {
     await page.close().catch(() => {});
   }

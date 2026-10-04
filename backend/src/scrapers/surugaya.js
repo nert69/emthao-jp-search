@@ -4,11 +4,9 @@ function buildUrl(query) {
   return url.href;
 }
 
-// Public search returned a 403 challenge during verification. Do not advertise
-// unverified selectors or bypass the challenge; expose an honest manual fallback.
-async function search(_context, query) {
-  return { results: [], status: 'unavailable', hasMore: false,
-    message: 'Surugaya automated search is unavailable. Search the source directly.', searchUrl: buildUrl(query) };
+// Use the public ZenMarket catalogue when the direct site blocks automated access.
+async function search(context, query, opts = {}) {
+  return require('./marketProxy').search(context, query, opts, 'surugaya');
 }
 
 module.exports = { search, buildUrl };

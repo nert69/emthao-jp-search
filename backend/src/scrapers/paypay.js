@@ -3,6 +3,7 @@ const { paceDomain } = require('../concurrency');
 const { toItem } = require('./normalize');
 const { parsePrice } = require('../util/parsePrice');
 const { absoluteUrl } = require('../util/absoluteUrl');
+const proxy = require('./marketProxy');
 
 const SOURCE = 'paypay';
 const HOST = 'paypayfleamarket.yahoo.co.jp';
@@ -38,7 +39,8 @@ async function search(context, query, opts = {}) {
         },
         'paypay search returned non-200 after warmup'
       );
-      return [];
+      await page.close().catch(() => {});
+      return proxy.search(context, query, opts, SOURCE);
     }
 
     try {
@@ -48,7 +50,8 @@ async function search(context, query, opts = {}) {
         { scraper: SOURCE, status: 'no-anchors', durationMs: Date.now() - start },
         'paypay no item anchors rendered'
       );
-      return [];
+      await page.close().catch(() => {});
+      return proxy.search(context, query, opts, SOURCE);
     }
 
     // Defensive: even after warmup, surface the geo/data-failed fallback if it appears.
@@ -65,7 +68,8 @@ async function search(context, query, opts = {}) {
         },
         'paypay geo-blocked or data-fetch-failed'
       );
-      return [];
+      await page.close().catch(() => {});
+      return proxy.search(context, query, opts, SOURCE);
     }
 
     const raws = await page.$$eval(
@@ -107,7 +111,7 @@ async function search(context, query, opts = {}) {
       { scraper: SOURCE, durationMs: Date.now() - start, error: err.message },
       'paypay scrape failed'
     );
-    return [];
+    return proxy.search(context, query, opts, SOURCE);
   } finally {
     await page.close().catch(() => {});
   }

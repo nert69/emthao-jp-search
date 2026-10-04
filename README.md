@@ -1,6 +1,6 @@
 # EmThaoJPSearch
 
-General Japanese marketplace search aggregator: one keyword → unified results from **Mercari**, **Yahoo Auctions**, **PayPay Flea Market**, **Rakuma**, and **Mandarake**, with both JPY and VND prices on every card. **Surugaya** is a manual search fallback because automated access could not be verified reliably.
+General Japanese marketplace search aggregator: one keyword → unified results from **Mercari**, **Yahoo Auctions**, **PayPay Flea Market**, **Rakuma**, **Mandarake**, and **Surugaya**, with JPY and VND prices. Blocked Yahoo/PayPay searches use **Buyee**, with **ZenMarket** as another Yahoo provider. Surugaya uses ZenMarket's catalogue. Proxy listing buttons allow viewing from the UK.
 
 See [marketplace integration notes](MARKETPLACES.md) for availability rules, Japanese query behavior, validation, and running/deploying this fork.
 
@@ -142,7 +142,7 @@ Detailed mechanism + selectors + maintenance signals per scraper in
 
 ## Known limitations (Phase 1)
 
-- **PayPay** returns 0 results from non-JP IPs (Render Singapore included). Phase 5 residential proxy fixes this.
+- **Direct Yahoo/PayPay access** can be region-blocked. This fork falls back to public Buyee/ZenMarket searches; see `MARKETPLACES.md` for current behavior and provider limits.
 - **In-memory cache** resets on every backend restart. Phase 2 → Upstash Redis behind the same `cache.js` interface.
 - **Filters are client-side** (price min/max, condition pills, JPY/VND toggle). Phase 2 promotes them to backend `?price_min/max/condition` params.
 - **Per-scraper retry** is frontend-only (3-attempt backoff). Phase 2 adds in-scraper retry.
