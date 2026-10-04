@@ -21,6 +21,7 @@ import { Pager } from './components/Pager';
 import './App.css';
 
 const DEFAULT_PRICING = { rate: 185, markupPct: 20, shipVndPerKg: 175000, defaultWeightKg: 0.2 };
+const SOURCE_LABELS = { mercari: 'Mercari', yahoo: 'Yahoo Auctions', paypay: 'PayPay Flea', rakuma: 'Rakuma', mandarake: 'Mandarake', surugaya: 'Surugaya' };
 const EMPTY_FILTERS = {
   currency: 'jpy',
   priceMin: null,
@@ -53,6 +54,7 @@ export default function App() {
     refreshing,
     error,
     sourceStatus,
+    pendingSources,
     search,
     setMode,
     loadMore,
@@ -220,7 +222,10 @@ export default function App() {
           )}
 
           {hasResults && sourceFilter === 'all' && hasMoreAny && (
-            <div className="load-more-wrap">
+            <div className="load-more-wrap load-more-progress">
+              {pendingSources.length > 0 && (
+                <p role="status">Loading more from {pendingSources.map(s => SOURCE_LABELS[s]).join(', ')}. New listings appear below.</p>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary load-more"
@@ -240,8 +245,8 @@ export default function App() {
                 onSelect={setSingleViewPage}
                 onLoadNext={async () => {
                   const nextPage = loadedPages[sourceFilter] + 1;
-                  await loadNextSource(sourceFilter);
-                  setSingleViewPage(nextPage);
+                  const loaded = await loadNextSource(sourceFilter);
+                  if (loaded) setSingleViewPage(nextPage);
                 }}
                 exhausted={exhausted[sourceFilter]}
                 loading={loading}

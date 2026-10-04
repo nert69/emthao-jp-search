@@ -29,6 +29,8 @@ The adapters translate the API page/limit into native Rakuma 40-card and Mandara
 
 Buyee uses native 100-card pages; ZenMarket uses 20-card pages. API windows crossing a native boundary are combined before slicing. Buyee's 404 "No Results Found" page is treated as a verified empty search, not a blocked source. ZenMarket sessions are isolated so its search state does not carry between queries or marketplaces.
 
+In the All tab, Load more requests only unfinished marketplaces, at most two at a time, and displays each response as it arrives. Relevance order keeps existing cards in place and appends new listings below them; explicit price/date sorts still sort the full loaded list. Each source resumes at its own next unloaded page, including pages loaded in individual source tabs. Duplicate URLs are excluded. Failed page requests keep existing results and do not advance the source's page; Refresh retries unavailable sources.
+
 Live verification on 2026-10-04 found 20 Yahoo, 13 PayPay and 7 Surugaya matches for `シムピープル` through the actual combined backend. Yahoo and PayPay also returned matches for `シムズオンライン`; the two `EOL` codes returned legitimate empty searches. These counts are a snapshot and can change.
 
 ## Run locally
@@ -56,6 +58,7 @@ With both local servers running:
 ```sh
 node backend/scripts/smoke-frontend.js
 node backend/scripts/smoke-marketplaces.js
+node backend/scripts/smoke-pagination.js
 ```
 
 The backend tests cover query encoding, price/image extraction, proxy selection/fallback, original and proxy listing links, auction classification, zero bid counts, sold and cart signals, native pagination, failure/page cleanup, combined failures/timeouts, URL deduplication, source selection, and caching. The deterministic UI test covers source tabs, warnings, stock metadata, combined pagination, refresh, and bookmark persistence. The existing live browser smoke covers search, pricing, filters, home reset, pagination, history, bookmark and refresh.
