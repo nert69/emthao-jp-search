@@ -28,6 +28,8 @@ async function step(label, fn) {
   await step('1. Navigate', async () => {
     await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await page.waitForSelector('.brand h1', { timeout: 10000 });
+    // Retain coverage of the original optional VND + shipping workflow.
+    await page.getByLabel('Estimate currency').selectOption('vnd');
   });
 
   await step('1a. Health dot reaches "OK"', async () => {

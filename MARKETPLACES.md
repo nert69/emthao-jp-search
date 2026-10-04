@@ -1,6 +1,8 @@
 # Marketplace extensions
 
-The Express + Playwright scraper architecture, React search UI, JPY/VND pricing, Yahoo mode filters, bookmarks, history, and client filters are retained. Yahoo and PayPay keep their native parsers and now fall back to public proxy-service searches when direct access fails.
+The Express + Playwright scraper architecture, React search UI, Yahoo mode filters, bookmarks, history, and client filters are retained. Yahoo and PayPay keep their native parsers and now fall back to public proxy-service searches when direct access fails.
+
+The default secondary price is GBP, showing the item price converted from JPY without markup, shipping or taxes. Its fixed, dated reference is the [ECB rate for 2 October 2026](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html): EUR 1 = GBP 0.85033 = JPY 176.99, so JPY 1 ≈ GBP 0.0048044. It is not a live checkout quote or automatic daily rate. GBP filters accept pence and compare the displayed, rounded price. The Estimate selector saves the chosen display currency. Choosing VND restores the original markup, weight-based shipping and weight control; JPY and VND filters remain available. Bookmarks use the same selected estimate currency.
 
 | Source | Integration | Availability |
 | --- | --- | --- |
@@ -59,6 +61,7 @@ With both local servers running:
 node backend/scripts/smoke-frontend.js
 node backend/scripts/smoke-marketplaces.js
 node backend/scripts/smoke-pagination.js
+node backend/scripts/smoke-currency.js
 ```
 
 The backend tests cover query encoding, price/image extraction, proxy selection/fallback, original and proxy listing links, auction classification, zero bid counts, sold and cart signals, native pagination, failure/page cleanup, combined failures/timeouts, URL deduplication, source selection, and caching. The deterministic UI test covers source tabs, warnings, stock metadata, combined pagination, refresh, and bookmark persistence. The existing live browser smoke covers search, pricing, filters, home reset, pagination, history, bookmark and refresh.

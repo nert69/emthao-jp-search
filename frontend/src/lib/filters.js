@@ -36,7 +36,7 @@ export function vndToJpy(vnd, weightKg, cfg) {
 }
 
 export function applyClientFilters(items, filters, ctx = {}) {
-  const { priceMin, priceMax, vndMin, vndMax, conditionBuckets } = filters;
+  const { priceMin, priceMax, vndMin, vndMax, gbpMin, gbpMax, conditionBuckets } = filters;
   const { pricing, weightKg } = ctx;
 
   // Pre-compute JPY-equivalent bounds derived from VND inputs.
@@ -56,6 +56,11 @@ export function applyClientFilters(items, filters, ctx = {}) {
       if (priceMax != null && Number.isFinite(priceMax) && p > priceMax) return false;
       if (jpyFromVndMin != null && p < jpyFromVndMin) return false;
       if (jpyFromVndMax != null && p > jpyFromVndMax) return false;
+      const gbp = jpyToGbp(p, pricing);
+      if (gbp != null) {
+        if (gbpMin != null && Number.isFinite(Number(gbpMin)) && gbp < Number(gbpMin)) return false;
+        if (gbpMax != null && Number.isFinite(Number(gbpMax)) && gbp > Number(gbpMax)) return false;
+      }
     }
     if (conditionBuckets && conditionBuckets.length > 0) {
       const bucket = bucketForCondition(it.condition);
@@ -64,3 +69,4 @@ export function applyClientFilters(items, filters, ctx = {}) {
     return true;
   });
 }
+import { jpyToGbp } from './pricing';

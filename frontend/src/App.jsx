@@ -5,6 +5,7 @@ import { usePersistentState } from './hooks/usePersistentState';
 import { useHistory } from './hooks/useHistory';
 import { useHealth } from './hooks/useHealth';
 import { applyClientFilters } from './lib/filters';
+import { GBP_RATE, GBP_RATE_DATE, GBP_RATE_SOURCE } from './lib/pricing';
 import { SearchBar } from './components/SearchBar';
 import { WeightInput } from './components/WeightInput';
 import { SourceTabs } from './components/SourceTabs';
@@ -20,7 +21,7 @@ import { HealthDot } from './components/HealthDot';
 import { Pager } from './components/Pager';
 import './App.css';
 
-const DEFAULT_PRICING = { rate: 185, markupPct: 20, shipVndPerKg: 175000, defaultWeightKg: 0.2 };
+const DEFAULT_PRICING = { rate: 185, markupPct: 20, shipVndPerKg: 175000, defaultWeightKg: 0.2, gbpRate: GBP_RATE };
 const SOURCE_LABELS = { mercari: 'Mercari', yahoo: 'Yahoo Auctions', paypay: 'PayPay Flea', rakuma: 'Rakuma', mandarake: 'Mandarake', surugaya: 'Surugaya' };
 const EMPTY_FILTERS = {
   currency: 'jpy',
@@ -28,6 +29,8 @@ const EMPTY_FILTERS = {
   priceMax: null,
   vndMin: null,
   vndMax: null,
+  gbpMin: null,
+  gbpMax: null,
   conditionBuckets: [],
 };
 
@@ -38,6 +41,7 @@ export default function App() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [weightKg, setWeightKg] = usePersistentState('emthao.weightKg', 0.2);
   const [cachedPricing] = usePersistentState('emthao.pricing', DEFAULT_PRICING);
+  const [displayCurrency, setDisplayCurrency] = usePersistentState('emthao.displayCurrency', 'gbp');
 
   const {
     query,
@@ -86,7 +90,7 @@ export default function App() {
     reset();
   };
 
-  const pricing = livePricing || cachedPricing || DEFAULT_PRICING;
+  const pricing = useMemo(() => ({ ...DEFAULT_PRICING, ...(livePricing || cachedPricing), displayCurrency }), [livePricing, cachedPricing, displayCurrency]);
 
   const onSearch = (q) => {
     setSingleViewPage(1);
@@ -152,7 +156,14 @@ export default function App() {
             onHistoryClear={clearHistory}
           />
         )}
-        <WeightInput value={weightKg} onChange={setWeightKg} />
+        <label className="sort-controls">
+          <span className="sort-label">Estimate</span>
+          <select aria-label="Estimate currency" className="estimate-select" value={displayCurrency} onChange={e => setDisplayCurrency(e.target.value)}>
+            <option value="gbp">GBP (£)</option>
+            <option value="vnd">VND (đ)</option>
+          </select>
+        </label>
+        {displayCurrency === 'vnd' && <WeightInput value={weightKg} onChange={setWeightKg} />}
       </div>
 
       {view === 'search' && (
@@ -257,7 +268,7 @@ export default function App() {
           {!loading && !hasResults && !query && (
             <div className="empty-state landing">
               <h2>Search Japanese marketplaces at once</h2>
-              <p>Mercari, Yahoo Auctions, PayPay, Rakuma, Mandarake, and Surugaya — one keyword, JPY + VND prices.</p>
+              <p>Mercari, Yahoo Auctions, PayPay, Rakuma, Mandarake, and Surugaya — one keyword, yen prices with pound estimates.</p>
             </div>
           )}
         </main>
@@ -277,10 +288,12 @@ export default function App() {
       )}
 
       <footer className="app-footer">
-        <span>
+        {displayCurrency === 'gbp' ? <span>
+          GBP estimates: item price only; fees, shipping and taxes extra. ¥1 ≈ £{pricing.gbpRate.toFixed(5)} · <a href={GBP_RATE_SOURCE} target="_blank" rel="noopener noreferrer">ECB reference, {GBP_RATE_DATE}</a>
+        </span> : <span>
           Pricing: ¥1 ≈ {pricing.rate} đ · markup {pricing.markupPct}% · shipping{' '}
           {pricing.shipVndPerKg.toLocaleString('vi-VN')} đ/kg
-        </span>
+        </span>}
       </footer>
     </div>
   );

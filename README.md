@@ -1,6 +1,6 @@
 # EmThaoJPSearch
 
-General Japanese marketplace search aggregator: one keyword → unified results from **Mercari**, **Yahoo Auctions**, **PayPay Flea Market**, **Rakuma**, **Mandarake**, and **Surugaya**, with JPY and VND prices. Blocked Yahoo/PayPay searches use **Buyee**, with **ZenMarket** as another Yahoo provider. Surugaya uses ZenMarket's catalogue. Proxy listing buttons allow viewing from the UK.
+General Japanese marketplace search aggregator: one keyword → unified results from **Mercari**, **Yahoo Auctions**, **PayPay Flea Market**, **Rakuma**, **Mandarake**, and **Surugaya**, with JPY listing prices and GBP estimates by default. The original VND estimate remains optional. Blocked Yahoo/PayPay searches use **Buyee**, with **ZenMarket** as another Yahoo provider. Surugaya uses ZenMarket's catalogue. Proxy listing buttons allow viewing from the UK.
 
 See [marketplace integration notes](MARKETPLACES.md) for availability rules, Japanese query behavior, validation, and running/deploying this fork.
 

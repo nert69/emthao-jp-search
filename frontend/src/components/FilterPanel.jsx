@@ -7,6 +7,8 @@ export function FilterPanel({ filters, onChange, onReset, totalCount, filteredCo
     priceMax,
     vndMin,
     vndMax,
+    gbpMin,
+    gbpMax,
     conditionBuckets,
   } = filters;
 
@@ -16,6 +18,12 @@ export function FilterPanel({ filters, onChange, onReset, totalCount, filteredCo
     const trimmed = String(raw ?? '').trim();
     if (trimmed === '') {
       onChange({ ...filters, [key]: null });
+      return;
+    }
+    if (key === 'gbpMin' || key === 'gbpMax') {
+      const pounds = trimmed.replace(/[£,\s]/g, '');
+      // Preserve a trailing decimal point while entering pence.
+      if (/^\d*(\.\d{0,2})?$/.test(pounds)) onChange({ ...filters, [key]: pounds });
       return;
     }
     // Strip thousands separators (commas, spaces, dots used as group sep) but
@@ -36,22 +44,26 @@ export function FilterPanel({ filters, onChange, onReset, totalCount, filteredCo
     priceMax != null ||
     vndMin != null ||
     vndMax != null ||
+    gbpMin != null ||
+    gbpMax != null ||
     (conditionBuckets && conditionBuckets.length > 0);
 
   // Active currency's bound fields
-  const activeMin = currency === 'vnd' ? vndMin : priceMin;
-  const activeMax = currency === 'vnd' ? vndMax : priceMax;
-  const activeMinKey = currency === 'vnd' ? 'vndMin' : 'priceMin';
-  const activeMaxKey = currency === 'vnd' ? 'vndMax' : 'priceMax';
-  const symbol = currency === 'vnd' ? 'đ' : '¥';
-  const placeholderMin = currency === 'vnd' ? 'Min VND' : 'Min ¥';
-  const placeholderMax = currency === 'vnd' ? 'Max VND' : 'Max ¥';
+  const activeMin = currency === 'gbp' ? gbpMin : currency === 'vnd' ? vndMin : priceMin;
+  const activeMax = currency === 'gbp' ? gbpMax : currency === 'vnd' ? vndMax : priceMax;
+  const activeMinKey = currency === 'gbp' ? 'gbpMin' : currency === 'vnd' ? 'vndMin' : 'priceMin';
+  const activeMaxKey = currency === 'gbp' ? 'gbpMax' : currency === 'vnd' ? 'vndMax' : 'priceMax';
+  const symbol = currency === 'gbp' ? '£' : currency === 'vnd' ? 'đ' : '¥';
+  const placeholderMin = currency === 'gbp' ? 'Min £' : currency === 'vnd' ? 'Min VND' : 'Min ¥';
+  const placeholderMax = currency === 'gbp' ? 'Max £' : currency === 'vnd' ? 'Max VND' : 'Max ¥';
 
   return (
     <div className="filter-panel">
       <div className="filter-row">
         <span className="filter-label">Price</span>
         <div className="currency-toggle" role="tablist" aria-label="Filter currency">
+          <button type="button" className={`currency-tab ${currency === 'gbp' ? 'active' : ''}`}
+            onClick={() => setCurrency('gbp')} role="tab" aria-selected={currency === 'gbp'}>GBP</button>
           <button
             type="button"
             className={`currency-tab ${currency === 'jpy' ? 'active' : ''}`}
@@ -75,7 +87,7 @@ export function FilterPanel({ filters, onChange, onReset, totalCount, filteredCo
           <span className="filter-currency-symbol">{symbol}</span>
           <input
             type="text"
-            inputMode="numeric"
+            inputMode={currency === 'gbp' ? 'decimal' : 'numeric'}
             placeholder={placeholderMin}
             className="filter-price"
             value={activeMin ?? ''}
@@ -85,7 +97,7 @@ export function FilterPanel({ filters, onChange, onReset, totalCount, filteredCo
           <span className="filter-currency-symbol">{symbol}</span>
           <input
             type="text"
-            inputMode="numeric"
+            inputMode={currency === 'gbp' ? 'decimal' : 'numeric'}
             placeholder={placeholderMax}
             className="filter-price"
             value={activeMax ?? ''}
