@@ -5,7 +5,7 @@ The original Express + Playwright scraper architecture, React search UI, JPY/VND
 | Source | Integration | Availability |
 | --- | --- | --- |
 | Mercari | Existing intercepted JSON search | Existing on-sale filtering |
-| Yahoo Auctions | Existing DOM search | Existing active search and auction/fixed filters |
+| Yahoo Auctions | Existing DOM search | Existing active search and auction/fixed filters; explicit UK/EEA block warning |
 | PayPay Flea Market | Existing DOM search | Existing geographic-block detection |
 | Rakuma | New server-rendered `.item-box` adapter | `transaction=selling`; sold cards excluded defensively |
 | Mandarake | New `.block[data-itemidx]` adapter after session warmup | `soldOut=1` hides sold-out products; requires cart control; flags stock confirmation |

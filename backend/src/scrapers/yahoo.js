@@ -32,7 +32,17 @@ async function search(context, query, opts = {}) {
   const start = Date.now();
   try {
     await paceDomain(HOST);
-    await page.goto(url, { timeout: TIMEOUT_MS, waitUntil: 'domcontentloaded' });
+    const response = await page.goto(url, { timeout: TIMEOUT_MS, waitUntil: 'domcontentloaded' });
+    if (response && !response.ok()) {
+      const text = await page.locator('body').innerText();
+      const regionBlocked = /欧州経済領域|no longer available in the EEA|United Kingdom/i.test(text);
+      return {
+        results: [], status: 'unavailable', hasMore: false,
+        message: regionBlocked
+          ? 'Yahoo Auctions blocks access from the UK/EEA. Run the search backend in a supported region (such as Japan) to retrieve Yahoo results.'
+          : `Yahoo Auctions is unavailable (HTTP ${response.status()}). Try refreshing later.`,
+      };
+    }
 
     const remaining = TIMEOUT_MS - (Date.now() - start);
     try {
