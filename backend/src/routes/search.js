@@ -7,6 +7,9 @@ const pricing = require('../config/pricing');
 const mercari = require('../scrapers/mercari');
 const yahoo = require('../scrapers/yahoo');
 const paypay = require('../scrapers/paypay');
+const rakuma = require('../scrapers/rakuma');
+const mandarake = require('../scrapers/mandarake');
+const surugaya = require('../scrapers/surugaya');
 
 const router = express.Router();
 
@@ -14,9 +17,12 @@ const SCRAPERS = {
   mercari: mercari.search,
   yahoo: yahoo.search,
   paypay: paypay.search,
+  rakuma: rakuma.search,
+  mandarake: mandarake.search,
+  surugaya: surugaya.search,
 };
 
-const ALL_SOURCES = ['mercari', 'yahoo', 'paypay'];
+const ALL_SOURCES = Object.keys(SCRAPERS);
 // Render free is 0.1 CPU / 512 MB — page.goto routinely needs 8-15 s under
 // CPU contention. Localhost finishes in 2-4 s. Tunable via env so local dev
 // can keep the snappier 12 s while prod uses the bigger budget.
@@ -94,7 +100,8 @@ router.get('/search', async (req, res) => {
     const perScraperResults = await Promise.all(
       sources.map((src) =>
         limiter(() =>
-          withTimeout(SCRAPERS[src](context, q, { limit, yahooMode, page }), SCRAPER_TIMEOUT_MS, [], src)
+          withTimeout(SCRAPERS[src](context, q, { limit, yahooMode, page }), SCRAPER_TIMEOUT_MS,
+            { results: [], status: 'unavailable', hasMore: false, message: `${src} did not respond. Try refreshing.` }, src)
         )
       )
     );
@@ -102,7 +109,13 @@ router.get('/search', async (req, res) => {
     // accidentally pick up the same listing twice (selector overlap, etc.).
     const seen = new Set();
     const results = [];
-    for (const arr of perScraperResults) {
+    const sourceStatus = {};
+    for (const [index, response] of perScraperResults.entries()) {
+      const arr = Array.isArray(response) ? response : response.results;
+      sourceStatus[sources[index]] = Array.isArray(response)
+        ? { status: arr.length ? 'ok' : 'unknown',
+          ...(arr.length ? {} : { message: 'No results returned; this source may be unavailable.' }) }
+        : { status: response.status, hasMore: response.hasMore, message: response.message, searchUrl: response.searchUrl };
       for (const item of arr) {
         if (!item.url || seen.has(item.url)) continue;
         seen.add(item.url);
@@ -123,6 +136,7 @@ router.get('/search', async (req, res) => {
         defaultWeightKg: pricing.DEFAULT_WEIGHT_KG,
       },
       results,
+      sourceStatus,
     };
     cache.set(key, payload);
     logger.info(

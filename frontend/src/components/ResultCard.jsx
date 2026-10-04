@@ -7,6 +7,9 @@ const SOURCE_LABEL = {
   mercari: 'Mercari',
   yahoo: 'Yahoo',
   paypay: 'PayPay',
+  rakuma: 'Rakuma',
+  mandarake: 'Mandarake',
+  surugaya: 'Surugaya',
 };
 
 export function ResultCard({ item, weightKg, pricing, isBookmarked, onToggleBookmark }) {
@@ -34,6 +37,8 @@ export function ResultCard({ item, weightKg, pricing, isBookmarked, onToggleBook
         <PriceBlock jpy={item.price} weightKg={weightKg} pricing={pricing} />
 
         <div className="card-meta">
+          {item.shop && <span className="meta-chip">{item.shop}</span>}
+          {item.availability && <span className="meta-chip">{item.availability === "stock_confirmation" ? "Stock confirmation required" : "On sale"}</span>}
           {item.condition && <span className="meta-chip">{translateCondition(item.condition)}</span>}
           {item.bidCount != null && <span className="meta-chip">{item.bidCount} bids</span>}
           {item.timeLeft && <span className="meta-chip">{translateTimeLeft(item.timeLeft)}</span>}

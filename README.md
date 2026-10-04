@@ -1,6 +1,8 @@
 # EmThaoJPSearch
 
-Internal Japanese marketplace search aggregator: one keyword → unified results from **Mercari**, **Yahoo Auctions**, and **PayPay Flea Market**, with both JPY and VND prices on every card.
+General Japanese marketplace search aggregator: one keyword → unified results from **Mercari**, **Yahoo Auctions**, **PayPay Flea Market**, **Rakuma**, and **Mandarake**, with both JPY and VND prices on every card. **Surugaya** is a manual search fallback because automated access could not be verified reliably.
+
+See [marketplace integration notes](MARKETPLACES.md) for availability rules, Japanese query behavior, validation, and running/deploying this fork.
 
 | | |
 |---|---|

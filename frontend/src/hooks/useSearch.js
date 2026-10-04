@@ -2,8 +2,9 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { searchAll } from '../api/search';
 
 const PAGE_SIZE = 20;
-const SOURCES = ['mercari', 'yahoo', 'paypay'];
-const EMPTY_BUCKETS = { mercari: [], yahoo: [], paypay: [] };
+const SOURCES = ['mercari', 'yahoo', 'paypay', 'rakuma', 'mandarake', 'surugaya'];
+const sourceMap = value => Object.fromEntries(SOURCES.map(s => [s, typeof value === 'function' ? value(s) : value]));
+const EMPTY_BUCKETS = sourceMap(() => []);
 
 // A "bucket" for a source is an array of pages, where each page is the dedup'd item list
 // returned for that (source, page) tuple. So buckets.mercari[2] = items on Mercari page 3.
@@ -13,7 +14,7 @@ const EMPTY_BUCKETS = { mercari: [], yahoo: [], paypay: [] };
 // the same buckets, so switching tabs never loses fetched data.
 
 function splitBySource(items) {
-  const out = { mercari: [], yahoo: [], paypay: [] };
+  const out = sourceMap(() => []);
   for (const it of items || []) {
     if (out[it.source]) out[it.source].push(it);
   }
@@ -24,13 +25,14 @@ export function useSearch() {
   const [query, setQuery] = useState('');
   const [yahooMode, setYahooMode] = useState('all');
   const [buckets, setBuckets] = useState(EMPTY_BUCKETS);
-  const [exhausted, setExhausted] = useState({ mercari: false, yahoo: false, paypay: false });
+  const [exhausted, setExhausted] = useState(sourceMap(false));
   const [allViewPage, setAllViewPage] = useState(0);
   const [pricing, setPricing] = useState(null);
   const [cached, setCached] = useState(false);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [sourceStatus, setSourceStatus] = useState({});
 
   const inflightRef = useRef(null);
 
@@ -41,16 +43,12 @@ export function useSearch() {
   }, [buckets]);
 
   const counts = useMemo(
-    () => ({
-      mercari: buckets.mercari.reduce((n, p) => n + p.length, 0),
-      yahoo: buckets.yahoo.reduce((n, p) => n + p.length, 0),
-      paypay: buckets.paypay.reduce((n, p) => n + p.length, 0),
-    }),
+    () => sourceMap(s => buckets[s].reduce((n, p) => n + p.length, 0)),
     [buckets]
   );
 
   const loadedPages = useMemo(
-    () => ({ mercari: buckets.mercari.length, yahoo: buckets.yahoo.length, paypay: buckets.paypay.length }),
+    () => sourceMap(s => buckets[s].length),
     [buckets]
   );
 
@@ -60,7 +58,7 @@ export function useSearch() {
   );
 
   // Run a fetch and feed the result into per-source buckets.
-  // sourcesToFetch: array of source ids (e.g. ['mercari']) or null/undefined for all 3.
+  // sourcesToFetch: array of source ids (e.g. ['mercari']) or null/undefined for all sources.
   // mode: 'init' resets buckets to just this page; 'append' pushes onto each affected source.
   const runFetch = useCallback(
     async ({ q, ym, sourcesToFetch, pageToFetch, mode, nocache }) => {
@@ -71,6 +69,7 @@ export function useSearch() {
       if (nocache) setRefreshing(true);
       else setLoading(true);
       setError(null);
+      if (mode === 'init') setSourceStatus({});
 
       try {
         const res = await searchAll({
@@ -88,17 +87,10 @@ export function useSearch() {
         const affected = sourcesToFetch && sourcesToFetch.length ? sourcesToFetch : SOURCES;
 
         if (mode === 'init') {
-          // Fresh search: seed all 3 buckets with this page's items (or empty arrays).
-          setBuckets({
-            mercari: [bySrc.mercari],
-            yahoo: [bySrc.yahoo],
-            paypay: [bySrc.paypay],
-          });
-          setExhausted({
-            mercari: bySrc.mercari.length === 0,
-            yahoo: bySrc.yahoo.length === 0,
-            paypay: bySrc.paypay.length === 0,
-          });
+          // Fresh search: seed every source bucket with this page's items.
+          setBuckets(sourceMap(s => [bySrc[s]]));
+          setExhausted(sourceMap(s => res?.sourceStatus?.[s]?.hasMore != null
+            ? !res.sourceStatus[s].hasMore : bySrc[s].length === 0));
           setAllViewPage(1);
         } else {
           // Append: push to each affected source's bucket. Dedup across pages by URL.
@@ -115,12 +107,14 @@ export function useSearch() {
             const next = { ...prev };
             // Heuristic from old code: < PAGE_SIZE/2 items returned = source has no more.
             for (const src of affected) {
-              if (bySrc[src].length < PAGE_SIZE / 2) next[src] = true;
+              next[src] = res?.sourceStatus?.[src]?.hasMore != null
+                ? !res.sourceStatus[src].hasMore : bySrc[src].length < PAGE_SIZE / 2;
             }
             return next;
           });
         }
 
+        setSourceStatus(prev => ({ ...prev, ...res?.sourceStatus }));
         setQuery(q);
         setYahooMode(ym);
         setPricing(res?.pricing || null);
@@ -138,7 +132,7 @@ export function useSearch() {
         setError(err.message || 'Search failed');
         if (mode === 'init') {
           setBuckets(EMPTY_BUCKETS);
-          setExhausted({ mercari: false, yahoo: false, paypay: false });
+          setExhausted(sourceMap(false));
           setAllViewPage(0);
         }
       } finally {
@@ -158,9 +152,10 @@ export function useSearch() {
       if (!trimmed) {
         setQuery('');
         setBuckets(EMPTY_BUCKETS);
-        setExhausted({ mercari: false, yahoo: false, paypay: false });
+        setExhausted(sourceMap(false));
         setAllViewPage(0);
         setError(null);
+        setSourceStatus({});
         return;
       }
       return runFetch({ q: trimmed, ym, sourcesToFetch: null, pageToFetch: 1, mode: 'init' });
@@ -221,12 +216,13 @@ export function useSearch() {
     setQuery('');
     setYahooMode('all');
     setBuckets(EMPTY_BUCKETS);
-    setExhausted({ mercari: false, yahoo: false, paypay: false });
+    setExhausted(sourceMap(false));
     setAllViewPage(0);
     setCached(false);
     setLoading(false);
     setRefreshing(false);
     setError(null);
+    setSourceStatus({});
   }, []);
 
   return {
@@ -244,6 +240,7 @@ export function useSearch() {
     loading,
     refreshing,
     error,
+    sourceStatus,
     search,
     setMode,
     loadMore,

@@ -3,6 +3,9 @@ const SOURCES = [
   { id: 'mercari', label: 'Mercari', dot: 'src-mercari' },
   { id: 'yahoo', label: 'Yahoo Auctions', dot: 'src-yahoo' },
   { id: 'paypay', label: 'PayPay Flea', dot: 'src-paypay' },
+  { id: 'rakuma', label: 'Rakuma', dot: 'src-rakuma' },
+  { id: 'mandarake', label: 'Mandarake', dot: 'src-mandarake' },
+  { id: 'surugaya', label: 'Surugaya', dot: 'src-surugaya' },
 ];
 
 export function SourceTabs({ active, onChange, counts }) {

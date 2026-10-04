@@ -818,3 +818,8 @@ body, html, #root {
   .search-clear { right: 96px; }
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
+
+.src-rakuma { background: #bf185c; }
+.src-mandarake { background: #714098; }
+.src-surugaya { background: #22724b; }
+.source-warning { padding: 10px 16px; margin-bottom: 8px; border: 1px solid #a88743; border-radius: 8px; }

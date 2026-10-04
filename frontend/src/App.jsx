@@ -52,6 +52,7 @@ export default function App() {
     loading,
     refreshing,
     error,
+    sourceStatus,
     search,
     setMode,
     loadMore,
@@ -121,7 +122,7 @@ export default function App() {
           aria-label="Go to home"
         >
           <h1>EmThao<span className="brand-accent">JP</span></h1>
-          <span className="brand-tag">Mercari · Yahoo · PayPay</span>
+          <span className="brand-tag">Japanese marketplace search</span>
         </button>
         <div className="header-right">
           <HealthDot
@@ -155,6 +156,12 @@ export default function App() {
       {view === 'search' && (
         <main className="main">
           {error && <div className="error-banner">⚠ {error}</div>}
+          {Object.entries(sourceStatus).filter(([, info]) => info.status !== 'ok').map(([source, info]) => (
+            <div className="source-warning" role="status" key={source}>
+              <strong>{source}: </strong>{info.message}
+              {info.searchUrl && <a href={info.searchUrl} target="_blank" rel="noopener noreferrer"> Open source search</a>}
+            </div>
+          ))}
 
           {(query || hasResults) && (
             <div className="filters-row">
@@ -244,8 +251,8 @@ export default function App() {
 
           {!loading && !hasResults && !query && (
             <div className="empty-state landing">
-              <h2>Search 3 Japanese marketplaces at once</h2>
-              <p>Mercari, Yahoo Auctions, and PayPay Flea Market — one keyword, JPY + VND prices.</p>
+              <h2>Search Japanese marketplaces at once</h2>
+              <p>Mercari, Yahoo Auctions, PayPay, Rakuma, and Mandarake — one keyword, JPY + VND prices. Surugaya direct search is also available.</p>
             </div>
           )}
         </main>

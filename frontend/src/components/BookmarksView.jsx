@@ -8,8 +8,8 @@ export function BookmarksView({ bookmarks, weightKg, pricing, isBookmarked, onTo
   const [sortBy, setSortBy] = useState('saved-desc');
 
   const counts = useMemo(() => {
-    const c = { mercari: 0, yahoo: 0, paypay: 0 };
-    for (const b of bookmarks) if (c[b.source] != null) c[b.source]++;
+    const c = {};
+    for (const b of bookmarks) c[b.source] = (c[b.source] || 0) + 1;
     return c;
   }, [bookmarks]);
 
