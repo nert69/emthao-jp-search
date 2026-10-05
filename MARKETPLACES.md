@@ -47,6 +47,8 @@ npm run dev
 
 On Windows PowerShell, use `npm.cmd` if script execution policy blocks `npm.ps1`. Open http://localhost:5173. Backend defaults to http://localhost:8787. The existing `.env.example` files describe settings.
 
+For everyday Windows use, double-click **Start Japanese Search.cmd** in the project folder. It starts the backend and frontend in independent hidden background processes, checks both are ready, and opens the app. Each process is restarted if it exits. Reopening the launcher reuses running servers and prevents duplicate supervisors. Logs are kept in `.cache/local-servers/`. This is a local app: after restarting Windows, run the launcher again. It does not install a Windows service or login task. For diagnostics without opening a browser, run `node scripts/start-local.cjs --no-browser`.
+
 ## Verify
 
 ```sh
