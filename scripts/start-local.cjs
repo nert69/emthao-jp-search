@@ -3,6 +3,7 @@ const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const net = require('node:net');
+const { browserEnvironment } = require('./browser-environment.cjs');
 const root = path.resolve(__dirname, '..');
 const listening = port => new Promise(resolve => {
   const socket = net.createConnection({ host: '127.0.0.1', port });
@@ -17,7 +18,7 @@ const listening = port => new Promise(resolve => {
   }
   for (const [service, port] of [['backend', 8787], ['frontend', 5173]]) {
     if (await listening(port)) continue;
-    const worker = spawn(process.execPath, [path.join(__dirname, 'local-server.cjs'), service], { cwd: root, detached: true, windowsHide: true, stdio: 'ignore' });
+    const worker = spawn(process.execPath, [path.join(__dirname, 'local-server.cjs'), service], { cwd: root, detached: true, windowsHide: true, stdio: 'ignore', env: browserEnvironment() });
     worker.on('error', error => { console.error(error.message); process.exitCode = 1; });
     worker.unref();
   }

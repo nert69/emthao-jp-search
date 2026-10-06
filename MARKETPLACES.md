@@ -49,6 +49,8 @@ On Windows PowerShell, use `npm.cmd` if script execution policy blocks `npm.ps1`
 
 For everyday Windows use, double-click **Start Japanese Search.cmd** in the project folder. It starts the backend and frontend in independent hidden background processes, checks both are ready, and opens the app. Each process is restarted if it exits. Reopening the launcher reuses running servers and prevents duplicate supervisors. Logs are kept in `.cache/local-servers/`. This is a local app: after restarting Windows, run the launcher again. It does not install a Windows service or login task. For diagnostics without opening a browser, run `node scripts/start-local.cjs --no-browser`.
 
+The Windows launcher pins Playwright to the installed cache under the real user profile when available, so a temporary app-container `LOCALAPPDATA` does not make Chromium appear missing. An explicit `PLAYWRIGHT_BROWSERS_PATH` is preserved, including hermetic installs. Other environment variables and non-Windows launches are unchanged.
+
 ## Verify
 
 ```sh
